@@ -37,7 +37,6 @@ function registerSlashCommand() {
         helpString: 'Play Jenga',
     }));
 }
-
 async function sendResponse(bangCmd, name = undefined) {
     let response = await handleCommand(bangCmd);
     if (name) {
@@ -45,27 +44,26 @@ async function sendResponse(bangCmd, name = undefined) {
     }
 
     const messageOptions = {
-        source: 'jenga',
-        isSystemMessage: true, // Flag the message as system-generated
+        source: 'jenga',         // Source identifier
+        isSystemMessage: true,  // Flag as a system message
     };
 
     await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, messageOptions);
 }
-
-
 async function handleMessage(mesId, eventType) {
     const context = SillyTavern.getContext();
     const message = context.chat[mesId];
-    
-    // Log for debugging purposes
+
+    // Debugging log
     console.log(`[Jenga] Received message: "${message.mes}"`, message);
 
-    // Skip system messages
+    // Skip messages flagged as system messages
     if (message.isSystemMessage) {
-        console.log(`[Jenga] Ignoring system message: "${message.mes}"`);
+        console.log(`[Jenga] Skipping system message: "${message.mes}"`);
         return;
     }
 
+    // Detect valid bang command
     const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.trim().startsWith(cmd));
     if (!bangCmd) {
         console.log(`[Jenga] No valid command found in the message.`);
@@ -75,8 +73,6 @@ async function handleMessage(mesId, eventType) {
     console.log(`[Jenga] Detected command: ${bangCmd} in line: "${message.mes}"`);
     await sendResponse(bangCmd, message.name);
 }
-
-
 export const JengaExtension = {
     setup() {
         console.log('[Jenga] Doing setup');
