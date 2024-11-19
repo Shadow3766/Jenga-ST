@@ -55,21 +55,22 @@ async function sendResponse(bangCmd, name = undefined) {
 async function handleMessage(mesId, eventType) {
     const context = SillyTavern.getContext();
     const message = context.chat[mesId];
-    if (!message || !message.mes || typeof message.mes !== 'string') return;
+    
+    // Log the message object for debugging
+    console.log(`[Jenga] Message Received:`, message);
 
-    // Ensure the message is a user input
-    if (message.isSystemMessage) {
-        console.log('[Jenga] Ignoring system message:', message.mes);
+    if (!message || message.isSystemMessage) {
+        console.log(`[Jenga] Skipping system message: ${message ? message.mes : 'unknown'}`);
         return;
     }
 
-    // Detect and process valid bang commands
     const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.trim().startsWith(cmd));
     if (!bangCmd) return;
 
     console.log(`[Jenga] Handling user command: ${bangCmd}`);
     await sendResponse(bangCmd, message.name);
 }
+
 
 export const JengaExtension = {
     setup() {
