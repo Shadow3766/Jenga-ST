@@ -1,63 +1,68 @@
-// The main script for the extension
-// The following are examples of some basic extension functionality
+import { handleCommand } from './jenga.js';
+import { executeSlashCommandsWithOptions } from '../../../slash-commands.js';
+import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
+import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
+import { ARGUMENT_TYPE, SlashCommandArgument } from '../../../slash-commands/SlashCommandArgument.js';
+import { SlashCommandEnumValue } from '../../../slash-commands/SlashCommandEnumValue.js';
+import { eventSource, event_types } from '../../../../script.js';
 
-//You'll likely need to import extension_settings, getContext, and loadExtensionSettings from extensions.js
-import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
+const BANG_COMMANDS = {
+    START: '!startjenga',
+    PULL: '!pullblock',
+    PLACE: '!placeblock',
+    RESET: '!resetjenga',
+};
 
-//You'll likely need to import some other functions from the main script
-import { saveSettingsDebounced } from "../../../../script.js";
-
-// Keep track of where your extension is located, name should match repo name
-const extensionName = "st-extension-example";
-const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const extensionSettings = extension_settings[extensionName];
-const defaultSettings = {};
-
-
- 
-// Loads the extension settings if they exist, otherwise initializes them to the defaults.
-async function loadSettings() {
-  //Create the settings if they don't exist
-  extension_settings[extensionName] = extension_settings[extensionName] || {};
-  if (Object.keys(extension_settings[extensionName]).length === 0) {
-    Object.assign(extension_settings[extensionName], defaultSettings);
-  }
-
-  // Updating settings in the UI
-  $("#example_setting").prop("checked", extension_settings[extensionName].example_setting).trigger("input");
+function registerSlashCommand() {
+    SlashCommandParser.addCommandObject(SlashCommand.fromProps({
+        name: 'jenga',
+        unnamedArgumentList: [SlashCommandArgument.fromProps({
+            description: 'help topic',
+            typeList: [ARGUMENT_TYPE.STRING],
+            enumList: [
+                new SlashCommandEnumValue('start', 'Start a game'),
+                new SlashCommandEnumValue('pull', 'Pull a block'),
+                new SlashCommandEnumValue('place', 'Place a block'),
+                new SlashCommandEnumValue('reset', 'Reset game'),
+            ],
+        })],
+        callback: async (arg1, type) => {
+            const bangCmd = BANG_COMMANDS[type.toUpperCase()];
+            await sendResponse(bangCmd);
+        },
+        helpString: 'Play Jenga',
+    }));
 }
 
-// This function is called when the extension settings are changed in the UI
-function onExampleInput(event) {
-  const value = Boolean($(event.target).prop("checked"));
-  extension_settings[extensionName].example_setting = value;
-  saveSettingsDebounced();
+
+async function sendResponse(bangCmd, name = undefined) {
+    let response = await handleCommand(bangCmd);
+    if (name) {
+        response = response.replace(/You /g, `${name} `);
+    }
+    await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, { source: 'jenga' });
 }
 
-// This function is called when the button is clicked
-function onButtonClick() {
-  // You can do whatever you want here
-  // Let's make a popup appear with the checked setting
-  toastr.info(
-    `The checkbox is ${extension_settings[extensionName].example_setting ? "checked" : "not checked"}`,
-    "A popup appeared because you clicked the button!"
-  );
+async function handleMessage(mesId) {
+    const context = SillyTavern.getContext();
+
+    const message = context.chat[mesId];
+    if (!message) return;
+
+    const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.startsWith(cmd));
+    if (!bangCmd) return;
+
+    await sendResponse(bangCmd, message.name);
 }
 
-// This function is called when the extension is loaded
+export function setup() {
+    console.log('[Jenga] doing setup');
+    registerSlashCommand();
+    eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
+}
+
 jQuery(async () => {
-  // This is an example of loading HTML from a file
-  const settingsHtml = await $.get(`${extensionFolderPath}/example.html`);
-
-  // Append settingsHtml to extensions_settings
-  // extension_settings and extensions_settings2 are the left and right columns of the settings menu
-  // Left should be extensions that deal with system functions and right should be visual/UI related 
-  $("#extensions_settings").append(settingsHtml);
-
-  // These are examples of listening for events
-  $("#my_button").on("click", onButtonClick);
-  $("#example_setting").on("input", onExampleInput);
-
-  // Load settings when starting things up (if you have any)
-  loadSettings();
+    console.log('[Jenga] loaded');
+    setup();
 });
