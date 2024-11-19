@@ -28,41 +28,50 @@ function registerSlashCommand() {
         })],
         callback: async (arg1, type) => {
             const bangCmd = BANG_COMMANDS[type.toUpperCase()];
+            if (!bangCmd) {
+                console.error(`[Jenga] Invalid command type: ${type}`);
+                return;
+            }
             await sendResponse(bangCmd);
         },
         helpString: 'Play Jenga',
     }));
 }
 
-
 async function sendResponse(bangCmd, name = undefined) {
+    if (!Object.values(BANG_COMMANDS).includes(bangCmd)) {
+        console.error(`[Jenga] Invalid bang command: ${bangCmd}`);
+        return;
+    }
     let response = await handleCommand(bangCmd);
     if (name) {
-        response = response.replace(/You /g, `${name} `);
+        response = response.replace(/^You /, `${name} `);
     }
     await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, { source: 'jenga' });
 }
 
-async function handleMessage(mesId) {
+async function handleMessage(mesId, eventType) {
     const context = SillyTavern.getContext();
-
     const message = context.chat[mesId];
-    if (!message) return;
+    if (!message || !message.mes || typeof message.mes !== 'string') return;
 
     const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.startsWith(cmd));
     if (!bangCmd) return;
 
+    console.log(`[Jenga] Handling message (${eventType}): ${message.mes}`);
     await sendResponse(bangCmd, message.name);
 }
 
-export function setup() {
-    console.log('[Jenga] doing setup');
-    registerSlashCommand();
-    eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
-    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
-}
+export const JengaExtension = {
+    setup() {
+        console.log('[Jenga] doing setup');
+        registerSlashCommand();
+        eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.USER_MESSAGE_RENDERED));
+        eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.CHARACTER_MESSAGE_RENDERED));
+    }
+};
 
 jQuery(async () => {
     console.log('[Jenga] loaded');
-    setup();
+    JengaExtension.setup();
 });
