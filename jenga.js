@@ -58,6 +58,7 @@ function reduceStability(action) {
 
 // Pull a block from the tower (only one block at a time, and only if no block is already in hand)
 function pullBlock() {
+    console.log("Pull block function invoked.");
     if (!gameActive) return 'No active game! Use !startjenga to begin.';
 
     if (currentBlock) {
@@ -105,6 +106,7 @@ function placeBlock() {
 
 // Start a new game
 export async function startGame() {
+    console.log("Starting a new Jenga game...");
     stability = 100;
     gameActive = true;
 
@@ -116,6 +118,8 @@ export async function startGame() {
     }
 
     pulledBlocks = [];
+    currentBlock = null; // Ensure no block is in hand when starting
+    console.log("Game initialized, tower constructed.");
     return 'A new Jenga game has started! The tower has been successfully constructed with 18 layers. Stability is at 100%. Use !pullblock to pull a block.';
 }
 
@@ -131,6 +135,7 @@ function resetGame() {
 
 // Handle commands
 export async function handleCommand(command) {
+    console.log(`Received command: ${command}`);
     if (command === '!startjenga') return await startGame();
     if (command === '!pullblock') return pullBlock();
     if (command === '!placeblock') return placeBlock();
