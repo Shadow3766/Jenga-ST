@@ -1,4 +1,4 @@
-import { handleCommand } from './jenga_test.js';
+import { handleCommand } from './jenga.js';
 import { executeSlashCommandsWithOptions } from '../../../slash-commands.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
