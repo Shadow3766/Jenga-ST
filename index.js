@@ -39,15 +39,17 @@ function registerSlashCommand() {
 }
 
 async function sendResponse(bangCmd, name = undefined) {
-    if (!Object.values(BANG_COMMANDS).includes(bangCmd)) {
-        console.error(`[Jenga] Invalid bang command: ${bangCmd}`);
-        return;
-    }
     let response = await handleCommand(bangCmd);
     if (name) {
         response = response.replace(/^You /, `${name} `);
     }
-    await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, { source: 'jenga' });
+
+    const messageOptions = {
+        source: 'jenga',
+        isSystemMessage: true, // Mark as system-generated
+    };
+
+    await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, messageOptions);
 }
 
 async function handleMessage(mesId, eventType) {
@@ -55,17 +57,25 @@ async function handleMessage(mesId, eventType) {
     const message = context.chat[mesId];
     if (!message || !message.mes || typeof message.mes !== 'string') return;
 
-    const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.startsWith(cmd));
+    // Ensure the message is a user input
+    if (message.isSystemMessage) {
+        console.log('[Jenga] Ignoring system message:', message.mes);
+        return;
+    }
+
+    // Detect and process valid bang commands
+    const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.trim().startsWith(cmd));
     if (!bangCmd) return;
 
-    console.log(`[Jenga] Handling message (${eventType}): ${message.mes}`);
+    console.log(`[Jenga] Handling user command: ${bangCmd}`);
     await sendResponse(bangCmd, message.name);
 }
 
 export const JengaExtension = {
     setup() {
-        console.log('[Jenga] doing setup');
+        console.log('[Jenga] Doing setup');
         registerSlashCommand();
+
         eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.USER_MESSAGE_RENDERED));
         eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.CHARACTER_MESSAGE_RENDERED));
     }
