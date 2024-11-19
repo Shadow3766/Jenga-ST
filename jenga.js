@@ -5,7 +5,7 @@ let pulledBlocks = [];
 let blockData = [];
 let currentBlock = null; // Keeps track of the block in hand
 
-const mountPoint = '/scripts/extensions/third-party/ST-Jenga';
+const mountPoint = '/scripts/extensions/third-party/Jenga-ST';
 
 // Load block data from GitHub
 async function loadBlockData() {
