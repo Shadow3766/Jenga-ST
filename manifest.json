@@ -1,11 +1,13 @@
+
 {
-    "display_name": "Name Displayed in SillyTavern",
+    "display_name": "Jenga",
     "loading_order": 9,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "author": "yourNameHere",
+    "author": "Shadow3766,ceruleandeep",
     "version": "1.0.0",
-    "homePage": "yourUrlHere"
+    "homePage": "https://github.com/Shadow3766/Jenga-SillyTavern",
+    "auto_update": false
 }
