@@ -1,4 +1,4 @@
-import { handleCommand } from './jenga.js';
+import { handleCommand } from './jenga_test.js';
 import { executeSlashCommandsWithOptions } from '../../../slash-commands.js';
 import { SlashCommandParser } from '../../../slash-commands/SlashCommandParser.js';
 import { SlashCommand } from '../../../slash-commands/SlashCommand.js';
@@ -28,62 +28,41 @@ function registerSlashCommand() {
         })],
         callback: async (arg1, type) => {
             const bangCmd = BANG_COMMANDS[type.toUpperCase()];
-            if (!bangCmd) {
-                console.error(`[Jenga] Invalid command type: ${type}`);
-                return;
-            }
             await sendResponse(bangCmd);
         },
         helpString: 'Play Jenga',
     }));
 }
+
+
 async function sendResponse(bangCmd, name = undefined) {
     let response = await handleCommand(bangCmd);
     if (name) {
-        response = response.replace(/^You /, `${name} `);
+        response = response.replace(/You /g, `${name} `);
     }
-
-    const messageOptions = {
-        source: 'jenga',         // Source identifier
-        isSystemMessage: true,  // Flag as a system message
-    };
-
-    await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, messageOptions);
+    await executeSlashCommandsWithOptions(`/sys compact=true ${response}`, { source: 'jenga' });
 }
-async function handleMessage(mesId, eventType) {
+
+async function handleMessage(mesId) {
     const context = SillyTavern.getContext();
+
     const message = context.chat[mesId];
+    if (!message) return;
 
-    // Debugging log
-    console.log(`[Jenga] Received message: "${message.mes}"`, message);
+    const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.startsWith(cmd));
+    if (!bangCmd) return;
 
-    // Skip messages flagged as system messages
-    if (message.isSystemMessage) {
-        console.log(`[Jenga] Skipping system message: "${message.mes}"`);
-        return;
-    }
-
-    // Detect valid bang command
-    const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.trim().startsWith(cmd));
-    if (!bangCmd) {
-        console.log(`[Jenga] No valid command found in the message.`);
-        return;
-    }
-
-    console.log(`[Jenga] Detected command: ${bangCmd} in line: "${message.mes}"`);
     await sendResponse(bangCmd, message.name);
 }
-export const JengaExtension = {
-    setup() {
-        console.log('[Jenga] Doing setup');
-        registerSlashCommand();
 
-        eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.USER_MESSAGE_RENDERED));
-        eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId, event_types.CHARACTER_MESSAGE_RENDERED));
-    }
-};
+export function setup() {
+    console.log('[Jenga] doing setup');
+    registerSlashCommand();
+    eventSource.on(event_types.USER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
+    eventSource.on(event_types.CHARACTER_MESSAGE_RENDERED, async (mesId) => handleMessage(mesId));
+}
 
 jQuery(async () => {
     console.log('[Jenga] loaded');
-    JengaExtension.setup();
+    setup();
 });
