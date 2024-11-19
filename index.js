@@ -49,10 +49,18 @@ async function handleMessage(mesId) {
     const message = context.chat[mesId];
     if (!message) return;
 
+    // Check if the message starts with a bang command
     const bangCmd = Object.values(BANG_COMMANDS).find(cmd => message.mes.startsWith(cmd));
     if (!bangCmd) return;
 
-    await sendResponse(bangCmd, message.name);
+    // Get the response from the Jenga handler
+    const response = await handleCommand(bangCmd);
+
+    // Update the original message to include the response
+    message.mes = `${message.mes} - ${response}`;
+
+    // Optional: Notify Silly Tavern that the message has been modified
+    context.chat[mesId] = message;
 }
 
 export function setup() {
