@@ -85,7 +85,7 @@ function placeBlock() {
     if (!gameActive) return 'No active game! Use !startjenga to begin.';
     if (!currentBlock) return 'You don\'t have any blocks to place. Pull a block first!';
 
-    // Place the pulled block back on top
+// Place the pulled block back on top
     const topLayer = tower[tower.length - 1];
     if (topLayer.length < 3) {
         topLayer.push(currentBlock);
@@ -96,7 +96,7 @@ function placeBlock() {
     const collapseMessage = reduceStability('place');
     const result = collapseMessage || `You placed ${currentBlock.block_id} back on top of the tower. Stability: ${stability.toFixed(1)}%`;
 
-    // Clear current block after placing
+// Clear current block after placing
     currentBlock = null;
 
     return result;
@@ -139,7 +139,17 @@ export async function handleCommand(command) {
 
 // Command handler for UI
 async function issueCommand(command) {
-    const output = document.getElementById('output');
+    const inputField = document.getElementById('input'); // Assuming an input field exists with this ID
+    const output = document.getElementById('output'); // Output display element
     const response = await handleCommand(command);
-    output.textContent = response;
+
+    if (inputField) {
+        // Append the response to the user's input message
+        inputField.value = `${command} - ${response}`;
+    }
+
+    if (output) {
+        // Display the updated message in the output area
+        output.textContent = `${command} - ${response}`;
+    }
 }
