@@ -1,4 +1,3 @@
-
 let stability = 100;
 let gameActive = false;
 let tower = [];
@@ -58,8 +57,7 @@ function reduceStability(action) {
 
 // Pull a block from the tower (only one block at a time, and only if no block is already in hand)
 function pullBlock() {
-    console.log("Pull block function invoked.");
-    if (!gameActive) return 'No active game! Use **!startjenga** to begin.';
+    if (!gameActive) return 'No active game! Use !startjenga to begin.';
 
     if (currentBlock) {
         return 'You already have a block in hand. Place it back on the tower before pulling another.';
@@ -84,7 +82,7 @@ function pullBlock() {
 
 // Place a pulled block on top of the tower
 function placeBlock() {
-    if (!gameActive) return 'No active game! Use **!startjenga** to begin.';
+    if (!gameActive) return 'No active game! Use !startjenga to begin.';
     if (!currentBlock) return 'You don\'t have any blocks to place. Pull a block first!';
 
     // Place the pulled block back on top
@@ -106,7 +104,6 @@ function placeBlock() {
 
 // Start a new game
 export async function startGame() {
-    console.log("Starting a new Jenga game...");
     stability = 100;
     gameActive = true;
 
@@ -118,9 +115,7 @@ export async function startGame() {
     }
 
     pulledBlocks = [];
-    currentBlock = null; // Ensure no block is in hand when starting
-    console.log("Game initialized, tower constructed.");
-    return 'The game begins! A new Jenga tower has been constructed with 18 layers. Stability is perfect at 100%. Use **!pullblock** to start pulling blocks.';
+    return 'A new Jenga game has started! The tower has been successfully constructed with 18 layers. Stability is at 100%. Use !pullblock to pull a block.';
 }
 
 // Reset the game
@@ -130,12 +125,11 @@ function resetGame() {
     tower = [];
     pulledBlocks = [];
     currentBlock = null;
-    return 'The Jenga game has been reset. Use **!startjenga** to begin a new game.';
+    return 'The Jenga game has been reset. Use !startjenga to begin a new game.';
 }
 
 // Handle commands
 export async function handleCommand(command) {
-    console.log(`Received command: ${command}`);
     if (command === '!startjenga') return await startGame();
     if (command === '!pullblock') return pullBlock();
     if (command === '!placeblock') return placeBlock();
@@ -145,7 +139,7 @@ export async function handleCommand(command) {
 
 // Command handler for UI
 async function issueCommand(command) {
-    console.log(`User issued command: ${command}`);
-    const response = await handleCommand(command); // Only pass actual commands
-    output.textContent = response; // Display response message, but don't reprocess it
+    const output = document.getElementById('output');
+    const response = await handleCommand(command);
+    output.textContent = response;
 }
